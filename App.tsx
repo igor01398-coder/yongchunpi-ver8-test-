@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Puzzle, AppView, PlayerStats, PuzzleProgress, SideMissionSubmission } from './types';
+import { Puzzle, AppView, PlayerStats, PuzzleProgress, SideMissionSubmission, StoryScript } from './types';
 import { ImageEditor } from './components/ImageEditor';
 import { GameMap } from './components/GameMap';
 import { IntroScreen } from './components/IntroScreen';
@@ -10,6 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { ManualModal } from './components/ManualModal';
 import { TreasureMapModal } from './components/TreasureMapModal';
 import { WeatherWidget } from './components/WeatherWidget';
+import { StoryOverlay } from './components/StoryOverlay';
 import { playSfx, setSfxEnabled } from './services/audioService';
 import { ASSETS } from './services/assetService';
 import { User, Satellite, LifeBuoy, BookOpen, X, Mountain, Info, ClipboardList, ChevronRight, CloudFog, MapPin, CheckCircle, AlertTriangle, Book, Clock, RotateCcw, Settings, Lock, ExternalLink } from 'lucide-react';
@@ -114,12 +115,13 @@ const SAMPLE_PUZZLES: Puzzle[] = [
     ],
     solutionStory: [
         { speaker: '村長', text: '原來如此！我看地圖上這一區線條密密麻麻的，難怪這麼陡。' },
-        { speaker: '王老師', text: '正是。如果你把等高線尖尖的地方連起來，代表我們剛剛走在稜線上喔！' }
+        { speaker: '王老師', text: '正是。如果你把等高線尖尖的地方連起來，就會發現一種地形喔！' }
     ],
     postStory: [
-        { speaker: '王老師', text: '恭喜你們！結合了高度、岩性與地形的知識，你們已經解開了永春陂的秘密。' },
+        { speaker: '王老師', text: '沒錯！代表我們剛剛走在稜線上喔！你會看到兩邊都是往下的坡。' },
+        { speaker: '王老師', text: '恭喜你們！結合了高度、岩性與地形的知識，你們已經通過了三道關卡。' },
         { speaker: '村長', text: '是這片土地的自然力量，加上水的匯聚，才造就了這個美麗的濕地啊。' },
-        { speaker: '王老師', text: '任務完成！讓我們把這些紀錄存入地質資料庫吧。' }
+        { speaker: '王老師', text: '好像有什麼東西在發光！請打開「尋寶手冊」，將收集到的三塊碎片拼湊起來吧！' }
     ],
     uploadInstruction: "上傳您的Mapy截圖，並繪製路線。",
     type: 'main',
@@ -146,6 +148,15 @@ const SIDE_MISSIONS: Puzzle[] = [
         ASSETS.PUZZLES.SIDE_1.CHECK_2
     ]
   }
+];
+
+// 結局劇情 (Finale Story)
+const FINALE_STORY: StoryScript[] = [
+    { speaker: '村長', text: '不可思議！三塊碎片拼湊起來，竟然是一張完整的永春陂古地圖。' },
+    { speaker: '王老師', text: '這就是地質調查的成果。你看，周圍高聳的四獸山像城牆一樣圍繞...' },
+    { speaker: '王老師', text: '那些是堅硬的砂岩。而中間這塊地勢低窪，是因為岩層較軟被雨水侵蝕，加上地勢匯聚，水流自然集中於此。' },
+    { speaker: '村長', text: '原來永春陂的誕生，是大地千萬年雕刻出來的傑作啊。' },
+    { speaker: '王老師', text: '沒錯。恭喜你們，小小地質學家！你們已經找回了這塊土地的記憶，也證明了自己是優秀的調查員！' },
 ];
 
 const INITIAL_STATS: PlayerStats = {
@@ -205,6 +216,10 @@ const App: React.FC = () => {
   const [endTime, setEndTime] = useState<Date | null>(initialSaveData?.endTime || null);
   const [missionDuration, setMissionDuration] = useState<string>("00:00:00");
   const [puzzleProgress, setPuzzleProgress] = useState<Record<string, PuzzleProgress>>(initialSaveData?.puzzleProgress || {});
+  
+  // New State for Finale
+  const [hasSeenFinale, setHasSeenFinale] = useState<boolean>(initialSaveData?.hasSeenFinale || false);
+
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -237,10 +252,10 @@ const App: React.FC = () => {
     const dataToSave = {
         playerStats, teamName, collectedFragments, completedPuzzleIds,
         startTime: startTime.toISOString(), endTime: endTime ? endTime.toISOString() : null,
-        puzzleProgress, isSfxEnabled: isSfxEnabledState
+        puzzleProgress, isSfxEnabled: isSfxEnabledState, hasSeenFinale
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [playerStats, teamName, collectedFragments, completedPuzzleIds, startTime, endTime, puzzleProgress, isSfxEnabledState]);
+  }, [playerStats, teamName, collectedFragments, completedPuzzleIds, startTime, endTime, puzzleProgress, isSfxEnabledState, hasSeenFinale]);
 
   const handleIntroStart = (name: string) => {
     setPlayerStats(INITIAL_STATS);
@@ -250,6 +265,7 @@ const App: React.FC = () => {
     setEndTime(null);
     setTeamName(name);
     setStartTime(new Date()); 
+    setHasSeenFinale(false);
     playSfx('start');
     setView(AppView.HOME);
   };
@@ -329,8 +345,15 @@ const App: React.FC = () => {
         }
     }
   };
+  
+  const handleFinaleComplete = () => {
+      setHasSeenFinale(true);
+      // The StoryOverlay closes, showing the TreasureMap underneath
+  };
 
   const xpPercentage = Math.min(((playerStats.currentXp % playerStats.nextLevelXp) / playerStats.nextLevelXp) * 100, 100);
+  
+  const isGameBeaten = completedPuzzleIds.length >= 3;
 
   return (
     <div className="h-[100dvh] w-screen bg-slate-50 text-slate-900 overflow-hidden flex flex-col font-sans relative">
@@ -394,9 +417,17 @@ const App: React.FC = () => {
             <div className="absolute bottom-6 left-6 z-[500] flex flex-col gap-3 pointer-events-auto">
                  <button onClick={() => setShowEncyclopedia(true)} className="bg-white/90 border border-teal-200 p-3 rounded-lg shadow-lg"><Book className="w-6 h-6 text-teal-600" /></button>
                  <button onClick={() => setShowSideMissions(true)} className="bg-white/90 border border-indigo-200 p-3 rounded-lg shadow-lg"><ClipboardList className="w-6 h-6 text-indigo-600" /></button>
-                 <button onClick={() => setShowTreasureMap(true)} className="bg-white/90 border border-amber-200 p-3 rounded-lg shadow-lg relative">
-                    <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{collectedFragments.length}/3</div>
-                    <BookOpen className="w-6 h-6 text-amber-500" />
+                 <button 
+                    onClick={() => setShowTreasureMap(true)} 
+                    className={`bg-white/90 border border-amber-200 p-3 rounded-lg shadow-lg relative transition-all duration-300 ${isGameBeaten && !hasSeenFinale ? 'animate-bounce ring-4 ring-amber-400 ring-opacity-50' : ''}`}
+                 >
+                    <div className={`absolute -top-2 -right-2 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isGameBeaten ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+                        {collectedFragments.length}/3
+                    </div>
+                    {isGameBeaten && !hasSeenFinale && (
+                         <div className="absolute inset-0 rounded-lg bg-amber-400 opacity-30 animate-ping"></div>
+                    )}
+                    <BookOpen className={`w-6 h-6 ${isGameBeaten ? 'text-emerald-600' : 'text-amber-500'}`} />
                  </button>
             </div>
 
@@ -404,7 +435,23 @@ const App: React.FC = () => {
             {showProfile && <PlayerProfileModal onClose={() => setShowProfile(false)} playerStats={playerStats} teamName={teamName} missionDuration={missionDuration} startTime={startTime} endTime={endTime} collectedFragments={collectedFragments} completedPuzzleCount={completedPuzzleIds.length} />}
             {showEncyclopedia && <EncyclopediaModal onClose={() => setShowEncyclopedia(false)} completedPuzzleIds={completedPuzzleIds} />}
             {showManual && <ManualModal onClose={() => setShowManual(false)} />}
-            {showTreasureMap && <TreasureMapModal onClose={() => setShowTreasureMap(false)} collectedFragments={collectedFragments} />}
+            
+            {showTreasureMap && (
+                <>
+                    {/* Render Modal Underneath or Alone */}
+                    <TreasureMapModal onClose={() => setShowTreasureMap(false)} collectedFragments={collectedFragments} />
+                    
+                    {/* Intercept with Finale Story if conditions met */}
+                    {isGameBeaten && !hasSeenFinale && (
+                        <StoryOverlay 
+                            script={FINALE_STORY} 
+                            onComplete={handleFinaleComplete} 
+                            teamName={teamName}
+                        />
+                    )}
+                </>
+            )}
+
             {showSideMissions && (
                 <div className="absolute inset-0 z-[1000] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
@@ -437,6 +484,7 @@ const App: React.FC = () => {
             initialState={puzzleProgress[activePuzzle.id]}
             isCompleted={completedPuzzleIds.includes(activePuzzle.id)}
             onStoryComplete={handleStoryComplete}
+            teamName={teamName}
         />
       )}
     </div>

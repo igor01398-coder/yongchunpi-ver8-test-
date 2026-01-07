@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { editImageWithGemini, fileToGenerativePart, validateImage } from '../services/geminiService';
 import { playSfx } from '../services/audioService';
 import { ASSETS } from '../services/assetService';
-import { Loader2, ArrowLeft, Upload, Camera, RefreshCw, Terminal, ChevronRight, CheckCircle, HelpCircle, AlertTriangle, ClipboardList, PartyPopper, Image as ImageIcon, ShieldCheck, Check, X, FolderOpen, ExternalLink, ScanSearch, Lightbulb, Map, History } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, Camera, RefreshCw, Terminal, ChevronRight, CheckCircle, HelpCircle, AlertTriangle, ClipboardList, PartyPopper, Image as ImageIcon, ShieldCheck, Check, X, FolderOpen, ExternalLink, ScanSearch, Lightbulb, Map, History, User } from 'lucide-react';
 import { Puzzle, PuzzleProgress, SideMissionSubmission } from '../types';
 import { StoryOverlay } from './StoryOverlay';
 
@@ -16,9 +16,10 @@ interface ImageEditorProps {
   onStoryComplete?: () => void; // New callback
   initialState?: PuzzleProgress;
   isCompleted?: boolean;
+  teamName?: string;
 }
 
-export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, onComplete, onSideMissionProgress, onFieldSolved, onStoryComplete, initialState, isCompleted }) => {
+export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, onComplete, onSideMissionProgress, onFieldSolved, onStoryComplete, initialState, isCompleted, teamName }) => {
   const [originalImage, setOriginalImage] = useState<string | null>(null); // Base64
   const [resultImage, setResultImage] = useState<string | null>(null); // Base64
   const [prompt, setPrompt] = useState<string>('');
@@ -68,6 +69,14 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   const [showOpeningStory, setShowOpeningStory] = useState(false);
   const [showSolutionStory, setShowSolutionStory] = useState(false);
   const [showPostStory, setShowPostStory] = useState(false);
+  
+  // Mission 2 Interlude State (New interactive choice)
+  const [showM2Interlude, setShowM2Interlude] = useState(false);
+  const [m2InterludeError, setM2InterludeError] = useState(false);
+
+  // Mission 3 Interlude State
+  const [showM3Interlude, setShowM3Interlude] = useState(false);
+  const [m3InterludeError, setM3InterludeError] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -424,11 +433,53 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   // Handler for when Solution Story finishes
   const handleSolutionStoryEnd = () => {
       setShowSolutionStory(false);
+      
+      // *** MISSION 2 INTERACTIVE BRANCH ***
+      // If this is Mission 2, trigger the interactive choice instead of going straight to PostStory
+      if (activePuzzle?.id === '2') {
+          setShowM2Interlude(true);
+          return;
+      }
+      
+      // *** MISSION 3 INTERACTIVE BRANCH ***
+      if (activePuzzle?.id === '3') {
+          setShowM3Interlude(true);
+          return;
+      }
+
       // Check for Post Story
       if (activePuzzle?.postStory && activePuzzle.postStory.length > 0) {
           setShowPostStory(true);
       } else {
           performFinalCompletion();
+      }
+  };
+  
+  // New: Handler for M2 Interlude Choice
+  const handleM2InterludeChoice = (choice: string) => {
+      if (choice === '差異侵蝕') {
+          playSfx('success');
+          setShowM2Interlude(false);
+          // Proceed to Post Story
+          setShowPostStory(true);
+      } else {
+          playSfx('error');
+          setM2InterludeError(true);
+          setTimeout(() => setM2InterludeError(false), 2000);
+      }
+  };
+
+  // New: Handler for M3 Interlude Choice
+  const handleM3InterludeChoice = (choice: string) => {
+      if (choice === '稜線') {
+          playSfx('success');
+          setShowM3Interlude(false);
+          // Proceed to Post Story
+          setShowPostStory(true);
+      } else {
+          playSfx('error');
+          setM3InterludeError(true);
+          setTimeout(() => setM3InterludeError(false), 2000);
       }
   };
   
@@ -490,6 +541,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                   setShowOpeningStory(false);
                   if (onStoryComplete) onStoryComplete();
               }}
+              teamName={teamName}
           />
       )}
       
@@ -498,14 +550,104 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
           <StoryOverlay 
               script={activePuzzle.solutionStory}
               onComplete={handleSolutionStoryEnd}
+              teamName={teamName}
           />
       )}
       
-      {/* 3. Post Story Overlay */}
+      {/* 3. Mission 2 Interactive Interlude (New) */}
+      {showM2Interlude && (
+          <div className="absolute inset-0 z-[1600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+               <div className="w-full max-w-sm animate-in zoom-in-95">
+                   <div className="flex items-end mb-[-2px] relative z-10 pl-4">
+                       <div className="px-6 py-2 rounded-t-lg font-bold font-mono text-sm border-t-2 border-x-2 border-white/20 bg-slate-700 text-slate-200">
+                           {teamName || 'Me'}
+                       </div>
+                   </div>
+                   <div className="bg-slate-900/95 border-2 border-white/20 rounded-lg p-6 relative shadow-2xl">
+                        {/* Player Avatar */}
+                        <div className="absolute -top-12 right-4 w-20 h-20 rounded-full border-4 border-slate-900 bg-white shadow-lg flex items-center justify-center overflow-hidden">
+                             <img src={ASSETS.CHARACTERS.PLAYER} alt="Me" className="w-full h-full object-cover" />
+                        </div>
+                        
+                        <p className="text-lg text-slate-100 font-sans leading-relaxed tracking-wide mb-6">
+                            我知道！這種軟硬岩層受侵蝕程度不同的現象，叫做...
+                        </p>
+                        
+                        <div className="grid gap-3">
+                             <button 
+                                onClick={() => handleM2InterludeChoice('向下侵蝕')}
+                                className="w-full bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 rounded-lg font-bold transition-all active:scale-95"
+                             >
+                                向下侵蝕
+                             </button>
+                             <button 
+                                onClick={() => handleM2InterludeChoice('差異侵蝕')}
+                                className="w-full bg-teal-600 hover:bg-teal-500 border border-teal-400 text-white py-3 rounded-lg font-bold transition-all active:scale-95 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+                             >
+                                差異侵蝕
+                             </button>
+                        </div>
+                        
+                        {m2InterludeError && (
+                             <div className="mt-4 text-center text-rose-400 text-sm font-bold animate-pulse">
+                                 再想想... 這是關於「不一樣」的侵蝕喔！
+                             </div>
+                        )}
+                   </div>
+               </div>
+          </div>
+      )}
+
+      {/* 4. Mission 3 Interactive Interlude (New) */}
+      {showM3Interlude && (
+          <div className="absolute inset-0 z-[1600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+               <div className="w-full max-w-sm animate-in zoom-in-95">
+                   <div className="flex items-end mb-[-2px] relative z-10 pl-4">
+                       <div className="px-6 py-2 rounded-t-lg font-bold font-mono text-sm border-t-2 border-x-2 border-white/20 bg-slate-700 text-slate-200">
+                           {teamName || 'Me'}
+                       </div>
+                   </div>
+                   <div className="bg-slate-900/95 border-2 border-white/20 rounded-lg p-6 relative shadow-2xl">
+                        {/* Player Avatar */}
+                        <div className="absolute -top-12 right-4 w-20 h-20 rounded-full border-4 border-slate-900 bg-white shadow-lg flex items-center justify-center overflow-hidden">
+                             <img src={ASSETS.CHARACTERS.PLAYER} alt="Me" className="w-full h-full object-cover" />
+                        </div>
+                        
+                        <p className="text-lg text-slate-100 font-sans leading-relaxed tracking-wide mb-6">
+                            我知道！這叫做...
+                        </p>
+                        
+                        <div className="grid gap-3">
+                             <button 
+                                onClick={() => handleM3InterludeChoice('牙線')}
+                                className="w-full bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 rounded-lg font-bold transition-all active:scale-95"
+                             >
+                                牙線
+                             </button>
+                             <button 
+                                onClick={() => handleM3InterludeChoice('稜線')}
+                                className="w-full bg-teal-600 hover:bg-teal-500 border border-teal-400 text-white py-3 rounded-lg font-bold transition-all active:scale-95 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+                             >
+                                稜線
+                             </button>
+                        </div>
+                        
+                        {m3InterludeError && (
+                             <div className="mt-4 text-center text-rose-400 text-sm font-bold animate-pulse">
+                                 嗯... 這應該不是用來清潔牙齒的吧？
+                             </div>
+                        )}
+                   </div>
+               </div>
+          </div>
+      )}
+      
+      {/* 5. Post Story Overlay */}
       {showPostStory && activePuzzle?.postStory && (
           <StoryOverlay 
               script={activePuzzle.postStory}
               onComplete={handlePostStoryEnd}
+              teamName={teamName}
           />
       )}
 

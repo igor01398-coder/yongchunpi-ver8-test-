@@ -9,7 +9,8 @@ import { ASSETS } from '../services/assetService';
 const DEFAULT_AVATARS: Record<string, string> = {
   '王老師': ASSETS.CHARACTERS.TEACHER,
   '村長': ASSETS.CHARACTERS.CHIEF,
-  'Me': ASSETS.CHARACTERS.PLAYER
+  'Me': ASSETS.CHARACTERS.PLAYER,
+  'Player': ASSETS.CHARACTERS.PLAYER
 };
 
 // 設定哪些角色使用「立繪模式」 (顯示在對話框上方的大圖)
@@ -19,9 +20,10 @@ const PORTRAIT_CHARACTERS: string[] = [];
 interface StoryOverlayProps {
   script: StoryScript[];
   onComplete: () => void;
+  teamName?: string;
 }
 
-export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }) => {
+export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete, teamName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -92,6 +94,12 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
 
   if (!currentLine) return null;
 
+  // Logic to determine if speaker is the player
+  const isPlayer = currentLine.speaker === 'Me' || currentLine.speaker === 'Player';
+  
+  // Display Name: Use teamName if available and speaker is player, otherwise use script speaker
+  const displaySpeaker = (isPlayer && teamName) ? teamName : currentLine.speaker;
+
   // Determine which image to show:
   const portraitUrl = currentLine.portraitUrl || DEFAULT_AVATARS[currentLine.speaker];
   
@@ -124,7 +132,7 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
                currentLine.speaker === '村長' ? 'bg-indigo-600 text-white' : 
                'bg-slate-700 text-slate-200'}
            `}>
-             {currentLine.speaker}
+             {displaySpeaker}
            </div>
         </div>
 
@@ -146,7 +154,7 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
                 {portraitUrl ? (
                     <img 
                         src={portraitUrl} 
-                        alt={currentLine.speaker} 
+                        alt={displaySpeaker} 
                         className="w-full h-full object-cover"
                     />
                 ) : (
