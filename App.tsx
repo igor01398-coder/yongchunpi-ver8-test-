@@ -33,7 +33,7 @@ const SAMPLE_PUZZLES: Puzzle[] = [
     },
     openingStory: [
         { speaker: '村長', text: '這裡就是永春陂的入口。你看，周圍的山勢是不是很特別？' },
-        { speaker: '王老師', text: '沒錯。請打開地圖，確認一下我們被哪些山頭包圍了。' },
+        { speaker: '王老師', text: '沒錯。請打開Mapy地圖，確認一下我們被哪些山頭包圍了。' },
         { speaker: '王老師', text: '這四座山頭——虎、豹、獅、象，是守護這裡的關鍵。要了解永春陂，得先認識它們的高度與位置。' }
     ],
     solutionStory: [
@@ -69,10 +69,10 @@ const SAMPLE_PUZZLES: Puzzle[] = [
     },
     openingStory: [
         { speaker: '王老師', text: '停一下！看看你身邊這片裸露的岩壁。' },
-        { speaker: '村長', text: '這片石頭看起來破破爛爛的，有什麼特別嗎？' },
+        { speaker: '村長', text: '這片石頭看起來有好多裂痕，有什麼特別嗎？' },
         { speaker: '王老師', text: '這可是大地的歷史書！這層岩石是構成此處的主要地基。' },
         { speaker: '王老師', text: '請各位同學上前去摸摸看。有些粗粗的像砂紙，有些滑滑的像粉末。' },
-        { speaker: '王老師', text: '試著分辨「砂岩」和「頁岩」，就能知道為什麼這裡會形成凹陷的陂塘了。' }
+        { speaker: '王老師', text: '試著分辨「砂岩」和「頁岩」，就能知道為什麼這裡的岩壁有一部份是凹陷的了。' }
     ],
     solutionStory: [
         { speaker: '王老師', text: '沒錯！粗粗的是砂岩，比較硬；滑滑的是頁岩，比較軟。' },
@@ -114,7 +114,7 @@ const SAMPLE_PUZZLES: Puzzle[] = [
     ],
     solutionStory: [
         { speaker: '村長', text: '原來如此！我看地圖上這一區線條密密麻麻的，難怪這麼陡。' },
-        { speaker: '王老師', text: '正是。這代表這裡的地層可能受到推擠，形成了陡峭的「單面山」地形。' }
+        { speaker: '王老師', text: '正是。如果你把等高線尖尖的地方連起來，代表我們剛剛走在稜線上喔！' }
     ],
     postStory: [
         { speaker: '王老師', text: '恭喜你們！結合了高度、岩性與地形的知識，你們已經解開了永春陂的秘密。' },

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, User, BookOpen, SkipForward } from 'lucide-react';
 import { StoryScript } from '../types';
 import { playSfx } from '../services/audioService';
@@ -25,36 +25,62 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  
+  // Refs to control the typing loop synchronously
+  const isTypingRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentLine = script[currentIndex];
 
   useEffect(() => {
     if (!currentLine) return;
     
+    // Init state for new line
     setDisplayedText('');
     setIsTyping(true);
+    isTypingRef.current = true;
+    
+    // Cleanup previous timer if any
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    // Use Array.from to correctly handle emojis/surrogate pairs
+    const fullTextChars = Array.from(currentLine.text);
     let charIndex = 0;
-    const fullText = currentLine.text;
 
-    const interval = setInterval(() => {
-      if (charIndex < fullText.length) {
-        setDisplayedText(prev => prev + fullText[charIndex]);
-        charIndex++;
-      } else {
-        setIsTyping(false);
-        clearInterval(interval);
-      }
-    }, 30); // Typing speed
+    const typeNextChar = () => {
+        // If typing was stopped (skipped), exit loop
+        if (!isTypingRef.current) return;
 
-    return () => clearInterval(interval);
-  }, [currentIndex, currentLine]);
+        if (charIndex < fullTextChars.length) {
+            charIndex++;
+            // Use slice logic to ensure deterministic output (prevents duplication bugs)
+            setDisplayedText(fullTextChars.slice(0, charIndex).join(''));
+            timerRef.current = setTimeout(typeNextChar, 30);
+        } else {
+            // Finished natural typing
+            setIsTyping(false);
+            isTypingRef.current = false;
+        }
+    };
+
+    // Start loop
+    timerRef.current = setTimeout(typeNextChar, 30);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      isTypingRef.current = false;
+    };
+  }, [currentIndex, currentLine]); // Re-run when script line changes
 
   const handleNext = () => {
     if (isTyping) {
-      // If typing, finish immediately
-      setDisplayedText(currentLine.text);
-      setIsTyping(false);
+      // SKIP: Force finish typing immediately
+      if (timerRef.current) clearTimeout(timerRef.current);
+      isTypingRef.current = false; // Stop the loop logic
+      setDisplayedText(currentLine.text); // Show full text
+      setIsTyping(false); // Update UI state
     } else {
+      // NEXT: Proceed to next line or finish
       playSfx('click');
       if (currentIndex < script.length - 1) {
         setCurrentIndex(prev => prev + 1);
