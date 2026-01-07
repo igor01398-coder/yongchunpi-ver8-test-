@@ -241,9 +241,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
 
     if (activePuzzle.id === '2') {
          // Mission 2 Logic: 
-         // 1. Formation = 南港層
+         // 1. Formation = 大寮層 OR 石底層 (Modified: Fill in the blank)
+         const formationInput = m2Formation.trim();
+         const formationCorrect = formationInput.includes('大寮層') || formationInput.includes('石底層');
+         
          // 2. Texture: Sandstone -> Rough, Shale -> Smooth
-         const formationCorrect = m2Formation === '南港層';
          const textureCorrect = m2Texture.sandstone === '較粗糙' && m2Texture.shale === '較細緻';
          
          if (formationCorrect && textureCorrect) {
@@ -743,25 +745,17 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                             </div>
                         ) : activePuzzle.id === '2' ? (
                             <div className="space-y-4">
-                                {/* Formation Question (Added back as first field) */}
+                                {/* Formation Question (Modified to Text Input) */}
                                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
                                     <div className="text-sm font-bold text-slate-700 mb-2">1. 我們現在位於哪個地層？</div>
-                                    <div className="flex gap-2">
-                                        {['南港層', '石底層'].map((opt) => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => setM2Formation(opt)}
-                                                disabled={isCompleted || isQuizSolved}
-                                                className={`flex-1 py-2 text-xs font-bold rounded border transition-all ${
-                                                    m2Formation === opt
-                                                        ? 'bg-teal-600 text-white border-teal-600 shadow-md'
-                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-teal-400'
-                                                }`}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <input 
+                                        type="text" 
+                                        value={m2Formation}
+                                        onChange={(e) => setM2Formation(e.target.value)}
+                                        placeholder="請輸入地層名稱 (例如: OO層)"
+                                        className="w-full bg-white border border-slate-300 text-slate-900 px-3 py-2 rounded font-mono text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all placeholder:text-slate-400 disabled:bg-slate-100 disabled:text-slate-900 disabled:border-slate-200 disabled:font-bold"
+                                        disabled={isCompleted || isQuizSolved}
+                                    />
                                 </div>
 
                                 <div className="border-t border-slate-200 my-2"></div>

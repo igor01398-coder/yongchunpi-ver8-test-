@@ -65,18 +65,18 @@ const SAMPLE_PUZZLES: Puzzle[] = [
     fragmentId: 1,
     quiz: {
       question: "地層辨識與岩石觸感分析",
-      answer: "南港層+配對"
+      answer: "大寮層 or 石底層"
     },
     openingStory: [
         { speaker: '王老師', text: '停一下！看看你身邊這片裸露的岩壁。' },
         { speaker: '村長', text: '這片石頭看起來破破爛爛的，有什麼特別嗎？' },
-        { speaker: '王老師', text: '這可是大地的歷史書！這層岩石叫做「南港層」，是這裡最主要的地基。' },
+        { speaker: '王老師', text: '這可是大地的歷史書！這層岩石是構成此處的主要地基。' },
         { speaker: '王老師', text: '請各位同學上前去摸摸看。有些粗粗的像砂紙，有些滑滑的像粉末。' },
         { speaker: '王老師', text: '試著分辨「砂岩」和「頁岩」，就能知道為什麼這裡會形成凹陷的陂塘了。' }
     ],
     solutionStory: [
         { speaker: '王老師', text: '沒錯！粗粗的是砂岩，比較硬；滑滑的是頁岩，比較軟。' },
-        { speaker: '王老師', text: '南港層就是這兩種石頭像千層派一樣疊在一起。' },
+        { speaker: '王老師', text: '這個地層就是由這兩種石頭像千層派一樣疊在一起。' },
         { speaker: '村長', text: '難怪這裡會凹下去... 是因為軟的石頭被雨水沖刷掉了嗎？' }
     ],
     postStory: [
