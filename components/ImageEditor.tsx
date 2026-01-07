@@ -22,6 +22,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   const [originalImage, setOriginalImage] = useState<string | null>(null); // Base64
   const [resultImage, setResultImage] = useState<string | null>(null); // Base64
   const [prompt, setPrompt] = useState<string>('');
+  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
+  const [imageSize, setImageSize] = useState<string>('1K');
   const [loading, setLoading] = useState(false);
   const [validationLoading, setValidationLoading] = useState(false);
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; feedback: string } | null>(null);
@@ -326,7 +328,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         
         // 2. Generation/Editing Step (only if valid, and NOT UploadOnly)
         if (prompt && !isUploadOnly) {
-             const resultBase64 = await editImageWithGemini(originalImage, prompt);
+             const resultBase64 = await editImageWithGemini(originalImage, prompt, aspectRatio, imageSize);
              setResultImage(resultBase64);
         }
         
@@ -589,7 +591,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-36 relative z-10">
-        {/* ... (rest of the component remains unchanged) ... */}
         
         {/* Instructions */}
         {activePuzzle && !originalImage && (
@@ -1079,23 +1080,59 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                                         {prompt}
                                      </div>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <input 
                                             type="text" 
                                             value={prompt}
                                             onChange={(e) => setPrompt(e.target.value)}
-                                            className={`bg-white border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:border-teal-500 focus:outline-none shadow-sm ${isUploadOnly ? 'w-full' : 'flex-1'}`}
+                                            className={`bg-white border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:border-teal-500 focus:outline-none shadow-sm flex-1`}
                                             placeholder={isUploadOnly ? "Record your observations here (optional)..." : "Enter visualization parameters..."}
                                         />
                                         {!isUploadOnly && (
-                                            <button 
-                                                onClick={handleValidateAndGenerate}
-                                                disabled={loading || (!prompt && !isUploadOnly)}
-                                                className="bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white px-4 py-2 rounded font-mono font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
-                                            >
-                                                {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Terminal className="w-3 h-3" />}
-                                                EXECUTE
-                                            </button>
+                                            <div className="flex gap-2">
+                                                {/* Aspect Ratio Selector */}
+                                                <div className="relative shrink-0">
+                                                    <select 
+                                                        value={aspectRatio}
+                                                        onChange={(e) => setAspectRatio(e.target.value)}
+                                                        className="bg-white border border-slate-300 rounded pl-2 pr-6 py-2 text-sm font-mono focus:border-teal-500 focus:outline-none shadow-sm appearance-none h-full cursor-pointer"
+                                                        title="Select Aspect Ratio"
+                                                    >
+                                                        {['1:1', '2:3', '3:2', '3:4', '4:3', '9:16', '16:9', '21:9'].map(r => (
+                                                            <option key={r} value={r}>{r}</option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                                    </div>
+                                                </div>
+
+                                                {/* Image Size Selector */}
+                                                <div className="relative shrink-0">
+                                                    <select 
+                                                        value={imageSize}
+                                                        onChange={(e) => setImageSize(e.target.value)}
+                                                        className="bg-white border border-slate-300 rounded pl-2 pr-6 py-2 text-sm font-mono focus:border-teal-500 focus:outline-none shadow-sm appearance-none h-full cursor-pointer"
+                                                        title="Select Image Size"
+                                                    >
+                                                        {['1K', '2K', '4K'].map(s => (
+                                                            <option key={s} value={s}>{s}</option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                                    </div>
+                                                </div>
+
+                                                <button 
+                                                    onClick={handleValidateAndGenerate}
+                                                    disabled={loading || (!prompt && !isUploadOnly)}
+                                                    className="bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white px-4 py-2 rounded font-mono font-bold text-xs flex items-center gap-2 transition-all shadow-sm shrink-0"
+                                                >
+                                                    {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Terminal className="w-3 h-3" />}
+                                                    EXECUTE
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 )}

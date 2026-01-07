@@ -1,7 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const GEMINI_MODEL = 'gemini-2.5-flash-image';
+const GEMINI_MODEL = 'gemini-3-pro-image-preview';
 // gemini-3-flash-preview is recommended for Basic Text Tasks like validation
 const GEMINI_VALIDATION_MODEL = 'gemini-3-flash-preview';
 
@@ -133,7 +133,12 @@ export const validateImage = async (
   }
 };
 
-export const editImageWithGemini = async (base64Image: string, prompt: string): Promise<string> => {
+export const editImageWithGemini = async (
+    base64Image: string, 
+    prompt: string, 
+    aspectRatio: string = '1:1',
+    imageSize: string = '1K'
+): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // Explicitly tell the model to return an image
@@ -155,6 +160,12 @@ export const editImageWithGemini = async (base64Image: string, prompt: string): 
             },
           ],
         },
+        config: {
+            imageConfig: {
+                aspectRatio: aspectRatio,
+                imageSize: imageSize
+            }
+        }
       });
 
       const parts = response.candidates?.[0]?.content?.parts || [];

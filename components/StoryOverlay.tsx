@@ -13,7 +13,8 @@ const DEFAULT_AVATARS: Record<string, string> = {
 };
 
 // 設定哪些角色使用「立繪模式」 (顯示在對話框上方的大圖)
-const PORTRAIT_CHARACTERS = ['村長', '王老師'];
+// 空陣列代表所有人使用預設的小圓圈 Icon (Empty array means everyone uses small circle icons)
+const PORTRAIT_CHARACTERS: string[] = [];
 
 interface StoryOverlayProps {
   script: StoryScript[];
@@ -76,6 +77,17 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
       className="absolute inset-0 z-[1500] bg-black/60 backdrop-blur-sm flex flex-col justify-end pb-8 sm:pb-12"
       onClick={handleNext}
     >
+      {/* Skip All Button - Positioned at top right of the screen */}
+      <button 
+          onClick={(e) => {
+              e.stopPropagation();
+              onComplete();
+          }}
+          className="absolute top-6 right-6 text-white/80 hover:text-white flex items-center gap-2 text-sm font-mono bg-black/40 px-4 py-2 rounded-full z-[1600] backdrop-blur-md border border-white/10 transition-colors shadow-lg"
+      >
+          <SkipForward className="w-4 h-4" /> SKIP STORY
+      </button>
+
       <div className="w-full max-w-2xl mx-auto px-4 relative">
         
         {/* Character Name Tag */}
@@ -109,9 +121,7 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
                     <img 
                         src={portraitUrl} 
                         alt={currentLine.speaker} 
-                        // 村長 (Pixel Art): 像素化渲染，並做適當縮放以顯示上半身
-                        className={`w-full h-full object-cover ${currentLine.speaker === '村長' ? 'object-top scale-125 translate-y-2' : ''}`}
-                        style={currentLine.speaker === '村長' ? { imageRendering: 'pixelated' } : {}}
+                        className="w-full h-full object-cover"
                     />
                 ) : (
                     // Fallback Icons
@@ -138,17 +148,6 @@ export const StoryOverlay: React.FC<StoryOverlayProps> = ({ script, onComplete }
                 <ChevronRight className="w-4 h-4" />
             </div>
         </div>
-        
-        {/* Skip All Button */}
-        <button 
-            onClick={(e) => {
-                e.stopPropagation();
-                onComplete();
-            }}
-            className="absolute top-4 right-4 text-white/50 hover:text-white flex items-center gap-1 text-xs font-mono bg-black/20 px-3 py-1 rounded-full z-0"
-        >
-            <SkipForward className="w-3 h-3" /> SKIP STORY
-        </button>
       </div>
     </div>
   );

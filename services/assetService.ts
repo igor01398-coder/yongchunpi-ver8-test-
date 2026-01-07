@@ -20,11 +20,9 @@ export const getDriveView = (id: string) => `https://drive.google.com/file/d/${i
 export const ASSETS = {
   // 角色頭像 (Characters)
   CHARACTERS: {
-    TEACHER: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Teacher&glasses=probability=100&clothing=blazerAndShirt&hair=shortFlat&hairColor=black&skinColor=light',
-    
-    // [村長圖片設定]
-    // 使用您提供的 Google Drive ID: 1xd9k87oKMMj0J3rnLx18770kQntVUWDi
-    CHIEF: getDriveImg('1xd9k87oKMMj0J3rnLx18770kQntVUWDi'), 
+    // 改回空字串以使用預設 Icon (Revert to empty strings to use default Icons)
+    TEACHER: '', 
+    CHIEF: '', 
     
     PLAYER: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Player&clothing=hoodie',
   },
