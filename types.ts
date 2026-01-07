@@ -17,7 +17,8 @@ export enum AppView {
 export interface StoryScript {
   speaker: string;
   text: string;
-  avatar?: 'teacher' | 'chief' | 'player'; // Optional avatar type
+  avatar?: 'teacher' | 'chief' | 'player'; // Optional avatar type key
+  portraitUrl?: string; // Optional: Specific image URL for this dialogue line (overrides default)
 }
 
 export interface Puzzle {
@@ -39,7 +40,11 @@ export interface Puzzle {
   type?: 'main' | 'side'; // Distinguish between main story and side missions
   referenceImage?: string; // Primary reference image
   referenceCheckImages?: string[]; // Array of reference images for AI comparison/User gallery
-  openingStory?: StoryScript[]; // RPG-style dialogue before mission starts
+  
+  // Story Scripts
+  openingStory?: StoryScript[]; // Before mission starts (前劇情)
+  solutionStory?: StoryScript[]; // Immediately upon solving/completing (謎底劇情)
+  postStory?: StoryScript[]; // After solution story, leading to next phase (後劇情)
 }
 
 export interface PlayerStats {

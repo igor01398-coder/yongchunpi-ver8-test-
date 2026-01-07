@@ -11,6 +11,7 @@ import { ManualModal } from './components/ManualModal';
 import { TreasureMapModal } from './components/TreasureMapModal';
 import { WeatherWidget } from './components/WeatherWidget';
 import { playSfx, setSfxEnabled } from './services/audioService';
+import { ASSETS } from './services/assetService';
 import { User, Satellite, LifeBuoy, BookOpen, X, Mountain, Info, ClipboardList, ChevronRight, CloudFog, MapPin, CheckCircle, AlertTriangle, Book, Clock, RotateCcw, Settings, Lock, ExternalLink } from 'lucide-react';
 
 const SAMPLE_PUZZLES: Puzzle[] = [
@@ -35,10 +36,20 @@ const SAMPLE_PUZZLES: Puzzle[] = [
         { speaker: '王老師', text: '沒錯。請打開地圖，確認一下我們被哪些山頭包圍了。' },
         { speaker: '王老師', text: '這四座山頭——虎、豹、獅、象，是守護這裡的關鍵。要了解永春陂，得先認識它們的高度與位置。' }
     ],
-    referenceImage: 'https://drive.google.com/uc?export=view&id=1-UVds4tg7gQxZo19uTgqyvfTwmEwI3c8',
+    solutionStory: [
+        { speaker: '王老師', text: '很好！你已經準確定位了四座山的高度。' },
+        { speaker: '村長', text: '原來我們真的是在一個「碗」裡面啊！四周高、中間低。' },
+        { speaker: '王老師', text: '這就是「盆地」或「窪地」的特徵。水往低處流，所以這裡自然就容易積水。' }
+    ],
+    postStory: [
+        { speaker: '王老師', text: '接下來，我們要去看看這些山的「骨頭」——也就是岩石。' },
+        { speaker: '村長', text: '岩石也有骨頭？' },
+        { speaker: '王老師', text: '哈哈，我是指構成山體的地層。往那個方向走，我們去找露出的岩壁。' }
+    ],
+    referenceImage: ASSETS.PUZZLES.M1.MAIN_REF,
     referenceCheckImages: [
-        'https://drive.google.com/uc?export=view&id=11CSe57nK3J-0hju0mRR8eDQ9g4hqn5JF',
-        'https://drive.google.com/uc?export=view&id=1_XGaO_K9uv4SaZsAc-LIiSPDCXBVbLtt'
+        ASSETS.PUZZLES.M1.CHECK_1,
+        ASSETS.PUZZLES.M1.CHECK_2
     ]
   },
   {
@@ -63,11 +74,21 @@ const SAMPLE_PUZZLES: Puzzle[] = [
         { speaker: '王老師', text: '請各位同學上前去摸摸看。有些粗粗的像砂紙，有些滑滑的像粉末。' },
         { speaker: '王老師', text: '試著分辨「砂岩」和「頁岩」，就能知道為什麼這裡會形成凹陷的陂塘了。' }
     ],
+    solutionStory: [
+        { speaker: '王老師', text: '沒錯！粗粗的是砂岩，比較硬；滑滑的是頁岩，比較軟。' },
+        { speaker: '王老師', text: '南港層就是這兩種石頭像千層派一樣疊在一起。' },
+        { speaker: '村長', text: '難怪這裡會凹下去... 是因為軟的石頭被雨水沖刷掉了嗎？' }
+    ],
+    postStory: [
+        { speaker: '王老師', text: '賓果！這就是「差異侵蝕」。軟的頁岩被侵蝕成谷地，硬的砂岩留下來變成山峰。' },
+        { speaker: '王老師', text: '但要形成這麼大的高低落差，還有一個關鍵... 我們得去爬一段陡坡體驗一下。' },
+        { speaker: '村長', text: '又要爬坡？我的老骨頭啊...' }
+    ],
     type: 'main',
-    referenceImage: 'https://drive.google.com/uc?export=view&id=1XEaYf4LuoadsCnneUUGQPFBObLRE9ikA',
+    referenceImage: ASSETS.PUZZLES.M2.MAIN_REF,
     referenceCheckImages: [
-        'https://drive.google.com/uc?export=view&id=1pyoxwe__OHmvF5RwO3KUwunbBF7OSX4E',
-        'https://drive.google.com/uc?export=view&id=1hkYG5AeVQqsTkLFS9X7r84TA3k_f6BMC'
+        ASSETS.PUZZLES.M2.CHECK_1,
+        ASSETS.PUZZLES.M2.CHECK_2
     ]
   },
   {
@@ -91,9 +112,18 @@ const SAMPLE_PUZZLES: Puzzle[] = [
         { speaker: '王老師', text: '看看地圖上那一圈一圈的線條，這叫做「等高線」。' },
         { speaker: '王老師', text: '線條密的地方就是陡坡，疏的地方就是緩坡。學會看這個，下次就不會走冤枉路了！' }
     ],
+    solutionStory: [
+        { speaker: '村長', text: '原來如此！我看地圖上這一區線條密密麻麻的，難怪這麼陡。' },
+        { speaker: '王老師', text: '正是。這代表這裡的地層可能受到推擠，形成了陡峭的「單面山」地形。' }
+    ],
+    postStory: [
+        { speaker: '王老師', text: '恭喜你們！結合了高度、岩性與地形的知識，你們已經解開了永春陂的秘密。' },
+        { speaker: '村長', text: '是這片土地的自然力量，加上水的匯聚，才造就了這個美麗的濕地啊。' },
+        { speaker: '王老師', text: '任務完成！讓我們把這些紀錄存入地質資料庫吧。' }
+    ],
     uploadInstruction: "上傳您的Mapy截圖，並繪製路線。",
     type: 'main',
-    referenceImage: 'https://drive.google.com/uc?export=view&id=1h1z0gNtdVvAfhZr_DqhbYAZJk3dxj0zL'
+    referenceImage: ASSETS.PUZZLES.M3.MAIN_REF
   }
 ];
 
@@ -112,8 +142,8 @@ const SIDE_MISSIONS: Puzzle[] = [
     type: 'side',
     uploadInstruction: '請拍攝擋土牆正面照片。',
     referenceCheckImages: [
-        'https://drive.google.com/uc?export=view&id=1luPB-i-a_YzHmPQiJVcxthPDBiPpv6Zl',
-        'https://drive.google.com/uc?export=view&id=1p0Az9jvsbjadMIQojasL4rhlr63mrf5D'
+        ASSETS.PUZZLES.SIDE_1.CHECK_1,
+        ASSETS.PUZZLES.SIDE_1.CHECK_2
     ]
   }
 ];

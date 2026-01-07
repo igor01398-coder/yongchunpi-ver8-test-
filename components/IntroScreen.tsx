@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Scroll, Users, ArrowRight, Terminal, Map, ShieldCheck, ExternalLink, Image as ImageIcon, RotateCcw, Play } from 'lucide-react';
-// FIX: Use relative path
 import { playSfx } from '../services/audioService';
+import { ASSETS } from '../services/assetService';
 
 interface IntroScreenProps {
   onStart: (teamName: string) => void;
@@ -14,8 +14,8 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onStart, onContinue, h
   const [teamName, setTeamName] = useState('');
   const [step, setStep] = useState<1 | 2>(1); // 1: Story/Menu, 2: Login (New Game)
 
-  // Google Drive Direct Link
-  const BG_IMAGE_URL = "https://drive.google.com/uc?export=view&id=1-UVds4tg7gQxZo19uTgqyvfTwmEwI3c8";
+  // Use centralized asset
+  const BG_IMAGE_URL = ASSETS.BACKGROUNDS.INTRO;
 
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-50 text-slate-800 relative overflow-hidden fixed inset-0 h-[100dvh]">

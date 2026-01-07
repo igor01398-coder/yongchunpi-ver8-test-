@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { editImageWithGemini, fileToGenerativePart, validateImage } from '../services/geminiService';
 import { playSfx } from '../services/audioService';
+import { ASSETS } from '../services/assetService';
 import { Loader2, ArrowLeft, Upload, Camera, RefreshCw, Terminal, ChevronRight, CheckCircle, HelpCircle, AlertTriangle, ClipboardList, PartyPopper, Image as ImageIcon, ShieldCheck, Check, X, FolderOpen, ExternalLink, ScanSearch, Lightbulb, Map, History } from 'lucide-react';
 import { Puzzle, PuzzleProgress, SideMissionSubmission } from '../types';
 import { StoryOverlay } from './StoryOverlay';
@@ -63,6 +64,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   
   // Story State
   const [showOpeningStory, setShowOpeningStory] = useState(false);
+  const [showSolutionStory, setShowSolutionStory] = useState(false);
+  const [showPostStory, setShowPostStory] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +77,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   useEffect(() => {
     if (activePuzzle) {
         // Story Logic: If puzzle has a story AND it hasn't been seen yet, show it.
-        if (activePuzzle.openingStory && activePuzzle.openingStory.length > 0) {
+        // Also don't show opening story if we are already in completed state upon load
+        if (activePuzzle.openingStory && activePuzzle.openingStory.length > 0 && !isCompleted) {
             if (!initialState?.hasSeenOpeningStory) {
                 setShowOpeningStory(true);
             }
@@ -340,9 +344,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
     fileInputRef.current?.click();
   };
 
-  // Triggered when user clicks "Transmit Data" or manual pass (via Auto-complete effect)
-  const handlePreComplete = () => {
-    const progressData: PuzzleProgress = {
+  // Helper to actually finalize data saving (Used after all stories are told)
+  const performFinalCompletion = () => {
+     const progressData: PuzzleProgress = {
         m1Heights,
         m1Reason,
         m2Texture,
@@ -358,10 +362,17 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         isQuizSolved,
         sideMissionSubmissions: submissionHistory,
         failureCount,
-        hasSeenOpeningStory: true // Ensure marked as seen
+        hasSeenOpeningStory: true 
     };
+    
+    // For Main Missions, complete with stayOnScreen=true to show the "Completed" state UI
+    if (onComplete) onComplete(progressData, true);
+  };
 
+  // Triggered when user clicks "Transmit Data" or manual pass (via Auto-complete effect)
+  const handlePreComplete = () => {
     if (activePuzzle?.type === 'side') {
+        // Side Missions: Instant logic, no story chain
         if (!originalImage) return;
 
         // Create submission object
@@ -391,12 +402,36 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         setPrompt('');
         
     } else {
+        // Main Mission Completion Logic
         playSfx('success');
-        // For Main Missions (like Mission 2), we do NOT show a modal that forces a leave.
-        // Instead, we mark it as complete locally by calling onComplete with stayOnScreen=true
-        // This locks the UI into "Completed" state but keeps the answers visible.
-        if (onComplete) onComplete(progressData, true);
+        
+        // Start Story Chain if available
+        if (activePuzzle?.solutionStory && activePuzzle.solutionStory.length > 0) {
+            setShowSolutionStory(true);
+        } else if (activePuzzle?.postStory && activePuzzle.postStory.length > 0) {
+             setShowPostStory(true);
+        } else {
+            // No stories, just finish
+            performFinalCompletion();
+        }
     }
+  };
+  
+  // Handler for when Solution Story finishes
+  const handleSolutionStoryEnd = () => {
+      setShowSolutionStory(false);
+      // Check for Post Story
+      if (activePuzzle?.postStory && activePuzzle.postStory.length > 0) {
+          setShowPostStory(true);
+      } else {
+          performFinalCompletion();
+      }
+  };
+  
+  // Handler for when Post Story finishes
+  const handlePostStoryEnd = () => {
+      setShowPostStory(false);
+      performFinalCompletion();
   };
 
   // Auto-complete Effect for Main Missions (M2, M3)
@@ -405,6 +440,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
     if (activePuzzle?.type !== 'side' && !isCompleted && isQuizSolved && validationResult?.isValid) {
         // Use a small timeout to allow UI to update (e.g. show validation success tick) before completing
         const timer = setTimeout(() => {
+           // Important: Auto-complete also triggers the story chain via handlePreComplete
            handlePreComplete();
         }, 1000); // 1s delay to see the green checkmark/feedback
         return () => clearTimeout(timer);
@@ -442,7 +478,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   return (
     <div className="flex flex-col h-full w-full max-w-3xl mx-auto bg-slate-50 relative">
       
-      {/* Story Overlay - Renders if showOpeningStory is true */}
+      {/* 1. Opening Story Overlay */}
       {showOpeningStory && activePuzzle?.openingStory && (
           <StoryOverlay 
               script={activePuzzle.openingStory}
@@ -450,6 +486,22 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                   setShowOpeningStory(false);
                   if (onStoryComplete) onStoryComplete();
               }}
+          />
+      )}
+      
+      {/* 2. Solution Story Overlay */}
+      {showSolutionStory && activePuzzle?.solutionStory && (
+          <StoryOverlay 
+              script={activePuzzle.solutionStory}
+              onComplete={handleSolutionStoryEnd}
+          />
+      )}
+      
+      {/* 3. Post Story Overlay */}
+      {showPostStory && activePuzzle?.postStory && (
+          <StoryOverlay 
+              script={activePuzzle.postStory}
+              onComplete={handlePostStoryEnd}
           />
       )}
 
@@ -470,7 +522,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
             {/* Mission 1: Map Link */}
             {activePuzzle?.id === '1' ? (
                  <a 
-                    href="https://mapy.com/en/zakladni?l=0&x=121.5825656&y=25.0303884&z=16"
+                    href={ASSETS.LINKS.MAPY_M1}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-amber-50 rounded-lg border border-amber-200 text-amber-600 shadow-sm transition-colors"
@@ -480,7 +532,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                 </a>
             ) : activePuzzle?.id === '2' ? (
                  <a 
-                    href="https://drive.google.com/drive/folders/1dGZAsbD-9MiJw3zUmwKkAt7juWJeXzt0?usp=drive_link"
+                    href={ASSETS.LINKS.M2_HINT_FOLDER}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-amber-50 rounded-lg border border-amber-200 text-amber-600 shadow-sm transition-colors"
@@ -490,7 +542,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                 </a>
             ) : activePuzzle?.type === 'side' ? (
                  <a 
-                    href="https://drive.google.com/drive/folders/1kRvBQLBJbDLCND8kM9H2viI2l6ZcHxon?usp=sharing"
+                    href={ASSETS.LINKS.SIDE_HINT_FOLDER}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-amber-50 rounded-lg border border-amber-200 text-amber-600 shadow-sm transition-colors"
@@ -514,7 +566,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
                     {/* Reference Image Button (if available) - Mission 3 specific override */}
                     {activePuzzle?.id === '3' ? (
                         <a 
-                            href="https://drive.google.com/file/d/1XjI4JsPsBlYo5uo_e4TePtDssbcQOYr6/view?usp=sharing"
+                            href={ASSETS.PUZZLES.M3.HINT_VIEW}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 hover:bg-amber-50 rounded-lg border border-amber-200 text-amber-600 shadow-sm transition-colors"
@@ -537,6 +589,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-36 relative z-10">
+        {/* ... (rest of the component remains unchanged) ... */}
         
         {/* Instructions */}
         {activePuzzle && !originalImage && (
@@ -858,6 +911,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
             </div>
         )}
 
+        {/* ... (rest of the component remains unchanged) ... */}
+        
         {/* Mission Completion Button for Mission 1 & 2 (Since no image upload) */}
         {(activePuzzle?.id === '1' || activePuzzle?.id === '2') && isQuizSolved && !isCompleted && (
             <button
