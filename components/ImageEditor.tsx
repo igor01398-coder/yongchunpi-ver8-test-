@@ -70,7 +70,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   const [showSolutionStory, setShowSolutionStory] = useState(false);
   const [showPostStory, setShowPostStory] = useState(false);
   
-  // Mission 2 Interlude State (New interactive choice)
+  // Mission 1 Interlude State
+  const [showM1Interlude, setShowM1Interlude] = useState(false);
+  const [m1InterludeError, setM1InterludeError] = useState(false);
+
+  // Mission 2 Interlude State
   const [showM2Interlude, setShowM2Interlude] = useState(false);
   const [m2InterludeError, setM2InterludeError] = useState(false);
 
@@ -434,6 +438,12 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
   const handleSolutionStoryEnd = () => {
       setShowSolutionStory(false);
       
+      // *** MISSION 1 INTERACTIVE BRANCH ***
+      if (activePuzzle?.id === '1') {
+          setShowM1Interlude(true);
+          return;
+      }
+      
       // *** MISSION 2 INTERACTIVE BRANCH ***
       // If this is Mission 2, trigger the interactive choice instead of going straight to PostStory
       if (activePuzzle?.id === '2') {
@@ -455,6 +465,20 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
       }
   };
   
+  // New: Handler for M1 Interlude Choice
+  const handleM1InterludeChoice = (choice: string) => {
+      if (choice === '窪地') {
+          playSfx('success');
+          setShowM1Interlude(false);
+          // Proceed to Post Story
+          setShowPostStory(true);
+      } else {
+          playSfx('error');
+          setM1InterludeError(true);
+          setTimeout(() => setM1InterludeError(false), 2000);
+      }
+  };
+
   // New: Handler for M2 Interlude Choice
   const handleM2InterludeChoice = (choice: string) => {
       if (choice === '差異侵蝕') {
@@ -554,7 +578,51 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
           />
       )}
       
-      {/* 3. Mission 2 Interactive Interlude (New) */}
+      {/* 3. Mission 1 Interactive Interlude (New) */}
+      {showM1Interlude && (
+          <div className="absolute inset-0 z-[1600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+               <div className="w-full max-w-sm animate-in zoom-in-95">
+                   <div className="flex items-end mb-[-2px] relative z-10 pl-4">
+                       <div className="px-6 py-2 rounded-t-lg font-bold font-mono text-sm border-t-2 border-x-2 border-white/20 bg-slate-700 text-slate-200">
+                           {teamName || 'Me'}
+                       </div>
+                   </div>
+                   <div className="bg-slate-900/95 border-2 border-white/20 rounded-lg p-6 relative shadow-2xl">
+                        {/* Player Avatar */}
+                        <div className="absolute -top-12 right-4 w-20 h-20 rounded-full border-4 border-slate-900 bg-white shadow-lg flex items-center justify-center overflow-hidden">
+                             <img src={ASSETS.CHARACTERS.PLAYER} alt="Me" className="w-full h-full object-cover" />
+                        </div>
+                        
+                        <p className="text-lg text-slate-100 font-sans leading-relaxed tracking-wide mb-6">
+                            我知道！這個碗狀地形叫做...
+                        </p>
+                        
+                        <div className="grid gap-3">
+                             <button 
+                                onClick={() => handleM1InterludeChoice('工地')}
+                                className="w-full bg-white/10 hover:bg-white/20 border border-white/30 text-white py-3 rounded-lg font-bold transition-all active:scale-95"
+                             >
+                                工地
+                             </button>
+                             <button 
+                                onClick={() => handleM1InterludeChoice('窪地')}
+                                className="w-full bg-teal-600 hover:bg-teal-500 border border-teal-400 text-white py-3 rounded-lg font-bold transition-all active:scale-95 shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+                             >
+                                窪地
+                             </button>
+                        </div>
+                        
+                        {m1InterludeError && (
+                             <div className="mt-4 text-center text-rose-400 text-sm font-bold animate-pulse">
+                                 看起來不像是在施工吧...？
+                             </div>
+                        )}
+                   </div>
+               </div>
+          </div>
+      )}
+      
+      {/* 4. Mission 2 Interactive Interlude (New) */}
       {showM2Interlude && (
           <div className="absolute inset-0 z-[1600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                <div className="w-full max-w-sm animate-in zoom-in-95">
@@ -598,7 +666,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
           </div>
       )}
 
-      {/* 4. Mission 3 Interactive Interlude (New) */}
+      {/* 5. Mission 3 Interactive Interlude (New) */}
       {showM3Interlude && (
           <div className="absolute inset-0 z-[1600] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                <div className="w-full max-w-sm animate-in zoom-in-95">
@@ -642,7 +710,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
           </div>
       )}
       
-      {/* 5. Post Story Overlay */}
+      {/* 6. Post Story Overlay */}
       {showPostStory && activePuzzle?.postStory && (
           <StoryOverlay 
               script={activePuzzle.postStory}
