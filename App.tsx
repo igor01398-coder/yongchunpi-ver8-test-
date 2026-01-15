@@ -146,6 +146,12 @@ const SIDE_MISSIONS: Puzzle[] = [
     referenceCheckImages: [
         ASSETS.PUZZLES.SIDE_1.CHECK_1,
         ASSETS.PUZZLES.SIDE_1.CHECK_2
+    ],
+    openingStory: [
+        { speaker: '王老師', text: '除了觀察自然地景，人造的防災設施也很重要。' },
+        { speaker: '王老師', text: '這些是「擋土牆」，用來穩定邊坡。請幫忙巡視周圍的擋土牆狀況。' },
+        { speaker: '村長', text: '原來這些牆壁這麼重要！我們該注意什麼呢？' },
+        { speaker: '王老師', text: '觀察牆面是否有裂縫，以及是否有排水孔。拍下來紀錄吧！' }
     ]
   }
 ];
