@@ -65,10 +65,10 @@ export const ManualModal: React.FC<ManualModalProps> = ({ onClose }) => {
             <h3 className="text-xs font-mono font-bold text-teal-600 uppercase tracking-widest mb-3">階級系統 (RANKING)</h3>
             <div className="space-y-2">
               {[
-                { rank: 'Cadet', title: '地質實習生', xp: '0 XP' },
+                { rank: 'Cadet', title: '小小地質學家', xp: '0 XP' },
                 { rank: 'Scout', title: '地形線索搜查員', xp: '500 XP' },
-                { rank: 'Ranger', title: '地層守護者', xp: '1000 XP' },
-                { rank: 'Master', title: '永春陂調查大師', xp: '1500+ XP' }
+                { rank: 'Ranger', title: '地質現象調查員', xp: '1000 XP' },
+                { rank: 'Master', title: '永春大地守護者', xp: '1500+ XP' }
               ].map((r, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 border-b border-slate-100 last:border-0">
                   <div className="flex items-center gap-3">

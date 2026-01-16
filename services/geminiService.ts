@@ -23,7 +23,13 @@ export const fileToGenerativePart = async (file: File): Promise<string> => {
 // Helper to fetch URL to base64 (handling potential CORS issues gracefully)
 const urlToBase64 = async (url: string): Promise<string | null> => {
   try {
-    const response = await fetch(url);
+    // Use CORS proxy for Google Drive images to allow fetch from browser
+    // This resolves the "Failed to fetch" / CORS errors when accessing Drive assets
+    const fetchUrl = url.includes('drive.google.com') 
+        ? `https://corsproxy.io/?${encodeURIComponent(url)}` 
+        : url;
+
+    const response = await fetch(fetchUrl);
     if (!response.ok) return null;
     const blob = await response.blob();
     return new Promise((resolve) => {

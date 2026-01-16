@@ -14,12 +14,13 @@ interface ImageEditorProps {
   onSideMissionProgress?: (submission: SideMissionSubmission) => void;
   onFieldSolved?: () => void;
   onStoryComplete?: () => void; // New callback
+  onAwardXp?: (amount: number) => void; // New XP callback
   initialState?: PuzzleProgress;
   isCompleted?: boolean;
   teamName?: string;
 }
 
-export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, onComplete, onSideMissionProgress, onFieldSolved, onStoryComplete, initialState, isCompleted, teamName }) => {
+export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, onComplete, onSideMissionProgress, onFieldSolved, onStoryComplete, onAwardXp, initialState, isCompleted, teamName }) => {
   const [originalImage, setOriginalImage] = useState<string | null>(null); // Base64
   const [resultImage, setResultImage] = useState<string | null>(null); // Base64
   const [prompt, setPrompt] = useState<string>('');
@@ -209,10 +210,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         checkRange(m1Heights.lion, 147, 153) && 
         checkRange(m1Heights.elephant, 180, 188)) {
         
-        setM1Part1Solved(true);
-        setM1Part1Error(false);
-        playSfx('success');
-        if (onFieldSolved) onFieldSolved();
+        if (!m1Part1Solved) {
+             setM1Part1Solved(true);
+             setM1Part1Error(false);
+             playSfx('success');
+             if (onFieldSolved) onFieldSolved();
+             if (onAwardXp) onAwardXp(100); // Award 100 XP for Part 1
+        }
         
         // Check if both parts are now solved
         if (m1Part2Solved) {
@@ -231,10 +235,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
     const hasLowConcept = r.includes('低') || r.includes('窪') || r.includes('水') || r.includes('凹');
 
     if (hasHighConcept && hasLowConcept) {
-        setM1Part2Solved(true);
-        setM1Part2Error(false);
-        playSfx('success');
-        if (onFieldSolved) onFieldSolved();
+        if (!m1Part2Solved) {
+            setM1Part2Solved(true);
+            setM1Part2Error(false);
+            playSfx('success');
+            if (onFieldSolved) onFieldSolved();
+            if (onAwardXp) onAwardXp(100); // Award 100 XP for Part 2
+        }
         
         // Check if both parts are now solved
         if (m1Part1Solved) {
@@ -251,6 +258,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
     if (!activePuzzle?.quiz) return;
     
     let isCorrect = false;
+    let xpToAward = 0;
 
     if (activePuzzle.id === '2') {
          // Mission 2 Logic: 
@@ -263,6 +271,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
          
          if (formationCorrect && textureCorrect) {
              isCorrect = true;
+             xpToAward = 200; // Formation(100) + Texture(100)
          }
     } else if (activePuzzle.id === '3') {
          // Logic: 
@@ -271,6 +280,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
          if ((quizSelect1 === '密集' && quizSelect2 === '累' && quizSelect3 === '很陡') || 
              (quizSelect1 === '稀疏' && quizSelect2 === '不累' && quizSelect3 === '平緩')) {
              isCorrect = true;
+             xpToAward = 100; // Quiz Part
          }
     } else {
         // Standard Text Logic for other missions
@@ -281,10 +291,13 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
     }
     
     if (isCorrect) {
-        setIsQuizSolved(true);
-        setShowQuizError(false);
-        playSfx('success');
-        if (onFieldSolved) onFieldSolved();
+        if (!isQuizSolved) {
+            setIsQuizSolved(true);
+            setShowQuizError(false);
+            playSfx('success');
+            if (onFieldSolved) onFieldSolved();
+            if (onAwardXp && xpToAward > 0) onAwardXp(xpToAward);
+        }
     } else {
         playSfx('error');
         setShowQuizError(true);
@@ -338,6 +351,10 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         // Mission 2 & 3 & Side Logic: If valid, award XP immediately and STOP (no generation)
         if (isUploadOnly && validation.isValid) {
             if (onFieldSolved) onFieldSolved();
+            // Mission 3 Upload Reward: 100 XP (Only grant if not completed yet, though auto-complete will trigger)
+            if (activePuzzle.id === '3' && onAwardXp && !isCompleted) {
+                onAwardXp(100);
+            }
             return;
         }
         
@@ -402,8 +419,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({ activePuzzle, onBack, 
         // Update local history for display
         setSubmissionHistory(prev => [newSubmission, ...prev]);
 
-        // Trigger parent callback to save state and award XP
+        // Trigger parent callback to save state
         if (onSideMissionProgress) onSideMissionProgress(newSubmission);
+        
+        // Award 50 XP for Side Mission Upload
+        if (onAwardXp) onAwardXp(50);
         
         playSfx('success');
 

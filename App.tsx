@@ -162,7 +162,7 @@ const FINALE_STORY: StoryScript[] = [
     { speaker: '王老師', text: '這就是地質調查的成果。你看，周圍高聳的四獸山像城牆一樣圍繞...' },
     { speaker: '王老師', text: '那些是堅硬的砂岩。而中間這塊地勢低窪，是因為岩層較軟被雨水侵蝕，加上地勢匯聚，水流自然集中於此。' },
     { speaker: '村長', text: '原來永春陂的誕生，是大地千萬年雕刻出來的傑作啊。' },
-    { speaker: '王老師', text: '沒錯。恭喜你們，小小地質學家！你們已經找回了這塊土地的記憶，也證明了自己是優秀的調查員！' },
+    { speaker: '王老師', text: '沒錯。恭喜你們找回了這塊土地的記憶，也證明了自己是優秀的調查員！成為這片土地的守護者！' },
 ];
 
 const INITIAL_STATS: PlayerStats = {
@@ -173,6 +173,18 @@ const INITIAL_STATS: PlayerStats = {
   mana: 75,
   maxMana: 100,
   sosCount: 1
+};
+
+// Rank System Definitions
+const RANK_SYSTEM = [
+  { threshold: 1500, title: '永春大地守護者' },
+  { threshold: 1000, title: '地質現象調查員' },
+  { threshold: 500,  title: '地形線索搜查員' },
+  { threshold: 0,    title: '小小地質學家' }
+];
+
+const getRankTitle = (xp: number): string => {
+  return RANK_SYSTEM.find(r => xp >= r.threshold)?.title || '小小地質學家';
 };
 
 const STORAGE_KEY = 'yongchun_save_v1';
@@ -290,15 +302,18 @@ const App: React.FC = () => {
     setShowSideMissions(false);
   };
 
-  const handleFieldSolved = () => {
-      if (activePuzzle?.type === 'side') return;
-      if (activePuzzle && completedPuzzleIds.includes(activePuzzle.id)) return;
-      playSfx('success');
+  // 核心 XP 獲得與升級邏輯 (Core XP Logic)
+  const awardXp = (amount: number) => {
       setPlayerStats(prev => {
-          const newXp = prev.currentXp + 100;
+          const newXp = prev.currentXp + amount;
           const newLevel = Math.floor(newXp / 500) + 1; 
-          return { ...prev, currentXp: newXp, level: newLevel, rank: "地形線索搜查員" };
+          const newRank = getRankTitle(newXp);
+          return { ...prev, currentXp: newXp, level: newLevel, rank: newRank };
       });
+  };
+
+  const handleFieldSolved = () => {
+      playSfx('success');
   };
 
   const handleEditorBack = (progress: PuzzleProgress) => {
@@ -309,7 +324,6 @@ const App: React.FC = () => {
     setActivePuzzle(null);
   };
   
-  // New: Handle story completion to record it
   const handleStoryComplete = () => {
       if (activePuzzle) {
           setPuzzleProgress(prev => ({
@@ -332,10 +346,14 @@ const App: React.FC = () => {
             setPuzzleProgress(prev => ({ ...prev, [puzzleId]: progressData }));
         }
 
+        // 主線任務完成邏輯 (Main Mission Completion)
         if (!completedPuzzleIds.includes(puzzleId) && puzzleType !== 'side') {
             const newCompletedIds = [...completedPuzzleIds, puzzleId];
             setCompletedPuzzleIds(newCompletedIds);
             
+            // 給予主線任務大關卡獎勵 (300 XP)
+            awardXp(activePuzzle.xpReward || 300);
+
             if (fragmentId !== -1) {
                 setCollectedFragments(prev => Array.from(new Set([...prev, fragmentId])));
             }
@@ -491,6 +509,7 @@ const App: React.FC = () => {
             isCompleted={completedPuzzleIds.includes(activePuzzle.id)}
             onStoryComplete={handleStoryComplete}
             teamName={teamName}
+            onAwardXp={awardXp}
         />
       )}
     </div>
